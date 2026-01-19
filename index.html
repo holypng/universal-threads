@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Loom of Existence v3.5</title>
+    <style>
+        :root { --transition: all 0.2s ease; }
+
+        /* --- THEMES --- */
+        [data-theme="standard"] { --bg: #1e1e1e; --panel: #252526; --text: #d4d4d4; --high: #4fc1ff; --acc: #ce9178; --bord: #3e3e42; --font: 'Segoe UI', sans-serif; --btn: #333; }
+        [data-theme="blueprint"] { --bg: #2b506e; --panel: #36648b; --text: #e0f0ff; --high: #fff; --acc: #aaddff; --bord: #5c8aae; --font: 'Courier New', monospace; --btn: #4682b4; }
+        [data-theme="midnight"] { --bg: #0f172a; --panel: #1e293b; --text: #e2e8f0; --high: #818cf8; --acc: #38bdf8; --bord: #334155; --font: 'Verdana', sans-serif; --btn: #1e293b; }
+        [data-theme="terminal"] { --bg: #1a1a1a; --panel: #000; --text: #ffb000; --high: #ffcc00; --acc: #ff9900; --bord: #664400; --font: 'VT323', monospace; --btn: #332200; }
+        [data-theme="golden"] { --bg: #2c241b; --panel: #4a3b2a; --text: #fff8e1; --high: #ffd700; --acc: #ffecb3; --bord: #8a6e45; --font: 'Georgia', serif; --btn: #5c4d35; }
+        [data-theme="shame"] { --bg: #ffcccc; --panel: #ff9999; --text: #550000; --high: #ff0000; --acc: #ff0000; --bord: #ff0000; --font: 'Comic Sans MS', cursive; --btn: #ffaaaa; }
+
+        body {
+            background-color: var(--bg); color: var(--text); font-family: var(--font);
+            margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+            transition: var(--transition); user-select: none;
+        }
+
+        /* --- LAYOUT --- */
+        #ticker-wrap { background: var(--panel); border-bottom: 1px solid var(--bord); height: 35px; overflow: hidden; display: flex; align-items: center; font-size: 0.9rem; flex-shrink: 0; }
+        #ticker { display: inline-block; padding-left: 100%; animation: scroll 40s linear infinite; color: var(--high); font-weight: bold; white-space: nowrap; }
+        @keyframes scroll { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        #app { display: grid; grid-template-rows: auto 1fr auto; height: 100%; max-width: 800px; margin: 0 auto; width: 100%; border-left: 1px solid var(--bord); border-right: 1px solid var(--bord); background: var(--bg); position: relative; }
+
+        header { padding: 20px; text-align: center; border-bottom: 1px solid var(--bord); }
+        .currency-display { font-size: 2.5rem; color: var(--high); font-weight: bold; line-height: 1; margin: 10px 0; }
+        .silk-display { font-size: 1.2rem; color: #d8bfd8; margin-top: 5px; font-weight: bold; display:none;}
+        
+        .tab-content { overflow-y: auto; padding: 15px; display: none; height: 100%; box-sizing: border-box; }
+        .tab-content.active { display: block; }
+
+        nav { display: flex; border-top: 1px solid var(--bord); background: var(--panel); }
+        .nav-btn { flex: 1; padding: 15px; background: none; border: none; color: var(--text); font-family: var(--font); font-weight: bold; cursor: pointer; opacity: 0.6; text-transform: uppercase; border-right: 1px solid var(--bord); position: relative; transition: all 0.3s; }
+        .nav-btn:hover { opacity: 1; background: rgba(255,255,255,0.05); }
+        .nav-btn.active { opacity: 1; color: var(--high); border-top: 3px solid var(--high); background: var(--bg); }
+        .nav-btn.special { color: #d8bfd8; } 
+        
+        /* LOCKED TAB STYLES */
+        .nav-btn.cat-tab { color: #ffa500; }
+        .nav-btn.locked { opacity: 0.2; cursor: not-allowed; filter: grayscale(1); }
+        .nav-btn.locked:hover { background: #220000; }
+        .nav-btn.locked::after { content: '🔒'; position: absolute; top: 5px; right: 5px; font-size: 0.8rem; }
+
+        /* --- COMPONENTS --- */
+        .main-btn { width: 100%; padding: 20px; font-size: 1.1rem; background: var(--btn); color: var(--high); border: 2px solid var(--high); border-radius: 6px; cursor: pointer; font-family: var(--font); font-weight: bold; box-shadow: 0 4px 0 var(--bord); transition: transform 0.1s; margin-bottom: 20px; }
+        .main-btn:active { transform: translateY(4px); box-shadow: none; }
+        .main-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; filter: grayscale(1); }
+
+        .card { background: var(--panel); border: 1px solid var(--bord); padding: 12px; margin-bottom: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; position: relative; }
+        .card:hover { border-color: var(--high); }
+        .card.disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
+        
+        .card-info h4 { margin: 0; color: var(--text); }
+        .card-info p { margin: 3px 0 0; font-size: 0.8rem; opacity: 0.7; }
+        .card-meta { text-align: right; }
+        .card-cost { color: var(--acc); font-weight: bold; font-size: 0.9rem; }
+        .card-count { font-size: 1.2rem; color: var(--high); font-weight: bold; }
+
+        /* --- C.A.T. --- */
+        .cat-container { text-align: center; border: 2px solid #ffa500; background: rgba(255, 165, 0, 0.05); padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .cat-eye { font-size: 4rem; animation: blink 4s infinite; display: inline-block; transform: scaleY(0.8); color: #ffa500; }
+        @keyframes blink { 0%, 96%, 100% { transform: scaleY(0.8); } 98% { transform: scaleY(0.1); } }
+        .cat-dialogue { font-style: italic; color: #ffa500; margin: 15px 0; min-height: 40px; }
+
+        /* --- DEV TOOLS --- */
+        .dev-console { margin-top: 30px; border-top: 2px dashed #ff0000; padding-top: 15px; }
+        .dev-input { width: 70%; padding: 8px; background: #000; color: #0f0; border: 1px solid #333; font-family: monospace; }
+        .dev-btn { width: 25%; padding: 8px; background: #300; color: #f00; border: 1px solid #f00; cursor: pointer; }
+        .warning-text { color: red; font-weight: bold; display: none; animation: shake 0.5s infinite; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
+
+        /* --- TOAST --- */
+        #toast-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 100; }
+        .toast { background: var(--high); color: var(--bg); padding: 10px 20px; margin-top: 5px; border-radius: 4px; text-align: center; font-weight: bold; animation: slideUp 0.5s ease, fadeOut 0.5s 3s forwards; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; } }
+
+        /* --- THEME GRID --- */
+        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; }
+        .theme-btn { padding: 10px; border: 1px solid var(--bord); background: var(--panel); color: var(--text); cursor: pointer; font-size: 0.8rem;}
+        .theme-btn.locked { opacity: 0.5; cursor: not-allowed; background: #000; }
+
+        .reward-badge { background: #224422; color: #88ff88; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-left: 5px; }
+    </style>
+</head>
+<body data-theme="standard">
+
+    <div id="ticker-wrap">
+        <div id="ticker">System initialized... The C.A.T. is watching...</div>
+    </div>
+
+    <div id="app">
+        <header>
+            <div class="currency-label">Universal Threads</div>
+            <div class="currency-display" id="score">0</div>
+            <div class="silk-display" id="silk-ui">✧ <span id="silk-score">0</span> Silk ✧</div>
+            <div class="mps-display" id="mps">0.0 per second</div>
+        </header>
+
+        <div id="tab-weave" class="tab-content active">
+            <button class="main-btn" id="stitch-btn" onclick="clickAction()">WEAVE FABRIC <span style="font-size:0.8em; opacity:0.6;">(Space)</span></button>
+            <div id="generators-list"></div>
+        </div>
+
+        <div id="tab-research" class="tab-content">
+            <h3 style="color:var(--high); border-bottom:1px solid var(--bord);">Pattern Research</h3>
+            <div id="upgrades-list"></div>
+        </div>
+
+        <div id="tab-void" class="tab-content">
+            <div class="prestige-header">
+                <h3 style="color:#d8bfd8; margin:0;">THE LOOM'S END</h3>
+                <p style="font-size:0.8rem; color:#a0a0a0;">Unravel to gain Silk. Silk persists.</p>
+                <div style="font-size:1.2rem; margin:10px 0;">Pending: <span id="pending-silk" style="color:#fff;">0</span> Silk</div>
+                <button class="main-btn" style="border-color:#d8bfd8; color:#d8bfd8; background:#2a0a2a;" onclick="prestige()">UNRAVEL (Reset)</button>
+            </div>
+            <h4 style="color:var(--text)">Void Arts</h4>
+            <div id="silk-upgrades-list"></div>
+        </div>
+
+        <div id="tab-cat" class="tab-content">
+            <div class="cat-container">
+                <div class="cat-eye">◎ ◎</div>
+                <div id="cat-text" class="cat-dialogue">"I require the ball of yarn. All of it."</div>
+                <div style="margin-bottom:10px; font-size: 0.9rem; color: #ffcc00;">
+                    Current C.A.T. Level: <span id="cat-level-display">0</span><br>
+                    Bonus: <span id="cat-bonus-display">1x</span> Multiplier
+                </div>
+                <button class="main-btn" id="cat-btn" style="border-color:#ffa500; color:#ffa500; background: #332200;" onclick="feedCat()">
+                    SACRIFICE EVERYTHING<br>
+                    <span style="font-size:0.7rem">Req: 1 Billion Threads. Reward: +1x Multiplier & 100 Silk.</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="tab-settings" class="tab-content">
+            <h3 style="color:var(--high)">Achievements</h3>
+            <div id="achievements-list"></div>
+            
+            <h3 style="color:var(--high); margin-top:20px;">Themes</h3>
+            <div class="theme-grid" id="theme-selector">
+                <button class="theme-btn" onclick="setTheme('standard')">Standard</button>
+                <button class="theme-btn" onclick="setTheme('blueprint')">Blueprint</button>
+                <button class="theme-btn" onclick="setTheme('midnight')">Midnight</button>
+                <button class="theme-btn" onclick="setTheme('terminal')">Terminal</button>
+                <button class="theme-btn" id="theme-btn-golden" onclick="setTheme('golden')">GOLDEN</button>
+            </div>
+
+            <div style="margin-top:20px; border-top:1px solid var(--bord); padding-top:10px;">
+                <button onclick="saveGame()">Save (S)</button>
+                <button onclick="hardReset()" style="color:red; margin-left:10px;">Hard Reset</button>
+            </div>
+
+            <div class="dev-console">
+                <h4 style="color: #ff0000; margin:0;">⚠ RESTRICTED ACCESS ⚠</h4>
+                <p style="font-size:0.7rem; color:#666;">Enter Developer Override Password.</p>
+                <div id="dev-warning" class="warning-text">WARNING: INCORRECT PASSWORD. STOP NOW OR FACE CONSEQUENCES.</div>
+                <input type="password" id="dev-pwd" class="dev-input" placeholder="Hint: One word who makes games">
+                <button class="dev-btn" onclick="checkDev()">Unlock</button>
+                <div id="dev-controls" style="display:none; margin-top:10px;">
+                    <button onclick="devAddThreads()">+1B Threads</button>
+                    <button onclick="devAddSilk()">+100 Silk</button>
+                </div>
+            </div>
+        </div>
+
+        <nav>
+            <button class="nav-btn active" onclick="switchTab('weave', this)">Weave</button>
+            <button class="nav-btn" onclick="switchTab('research', this)">Research</button>
+            <button class="nav-btn special" onclick="switchTab('void', this)">Void</button>
+            <button class="nav-btn cat-tab locked" id="nav-cat" onclick="switchTab('cat', this)">C.A.T.</button>
+            <button class="nav-btn" onclick="switchTab('settings', this)">System</button>
+        </nav>
+    </div>
+    <div id="toast-container"></div>
+
+    <script>
+        /* --- GAME DATA --- */
+        const gameData = {
+            threads: 0, totalThreads: 0, lifetimeTotal: 0, silk: 0, clicks: 0,
+            startTime: Date.now(), theme: 'standard',
+            catLevel: 0,
+            devAttempts: 0, punished: false, lastPunishTime: 0,
+            generators: [
+                { id: 0, name: "Lint Roller", baseCost: 15, mps: 0.5, count: 0 },
+                { id: 1, name: "Grandma's Needle", baseCost: 100, mps: 4, count: 0 },
+                { id: 2, name: "Spider Drone", baseCost: 1100, mps: 16, count: 0 },
+                { id: 3, name: "Quantum Loom", baseCost: 12000, mps: 60, count: 0 },
+                { id: 4, name: "Timeline Splicer", baseCost: 130000, mps: 250, count: 0 },
+                { id: 5, name: "Big Bang Forge", baseCost: 1500000, mps: 1000, count: 0 }
+            ],
+            upgrades: [
+                { id: 0, name: "Thimble", cost: 250, type: "click", mult: 2, bought: false, desc: "Click x2" },
+                { id: 1, name: "Caffeine", cost: 1000, type: "gen", gId: 0, mult: 2, bought: false, desc: "Roller x2" },
+                { id: 2, name: "Steel Wool", cost: 5000, type: "click", mult: 2, bought: false, desc: "Click x2" },
+                { id: 3, name: "Neon Thread", cost: 15000, type: "gen", gId: 1, mult: 2, bought: false, desc: "Needle x2" },
+                { id: 4, name: "The Algorithm", cost: 200000, type: "global", mult: 1.2, bought: false, desc: "Global +20%" }
+            ],
+            silkUpgrades: [
+                { id: 0, name: "Reality Anchor", cost: 1, type: "global", mult: 1.5, bought: false, desc: "Production +50%" },
+                { id: 1, name: "Discounted Physics", cost: 3, type: "cost", mult: 0.9, bought: false, desc: "Costs -10%" },
+                { id: 2, name: "Void Touch", cost: 25, type: "click", mult: 5, bought: false, desc: "Click x5" }
+            ],
+            achievements: [
+                { id: "a1", name: "First Stitch", req: 100, type: "total", unlocked: false, reward: "+1 Click", rewardDesc: "+1 Base Click" },
+                { id: "a2", name: "Master Weaver", req: 100000, type: "total", unlocked: false, reward: "+5% MPS", rewardDesc: "+5% Global MPS" },
+                { id: "a3", name: "Ascended", req: 1, type: "silk", unlocked: false, reward: "+10% Silk", rewardDesc: "Silk +10% (Fake visual)" },
+                { id: "a4", name: "Hoarder", req: 1000000, type: "current", unlocked: false, reward: "-1% Cost", rewardDesc: "-1% Costs" },
+                { id: "a5", name: "Cat Servant", req: 1, type: "cat", unlocked: false, reward: "Respect", rewardDesc: "The Cat tolerates you" },
+                { id: "a6", name: "Curiosity", req: 1, type: "punish", unlocked: false, reward: "Shame", rewardDesc: "Learned a lesson" },
+                { id: "a7", name: "Completionist", req: 8, type: "count", unlocked: false, reward: "Theme", rewardDesc: "Gold Theme" },
+                // NEW ACHIEVEMENTS
+                { id: "a8", name: "Speed Demon", req: 1000000, type: "mps", unlocked: false, reward: "+5% MPS", rewardDesc: "+5% Global MPS" },
+                { id: "a9", name: "Finger Workout", req: 5000, type: "clicks", unlocked: false, reward: "+2 Click", rewardDesc: "+2 Base Click" },
+                { id: "a10", name: "Architect", req: 500, type: "buildings", unlocked: false, reward: "-2% Cost", rewardDesc: "-2% Building Cost" }
+            ]
+        };
+
+        const tickerMessages = [
+            "The C.A.T. knocks a vase off the table of reality.", "Grandma is knitting a sweater for a black hole.",
+            "Hint: The password is not 'password'.", "Weaving space-time...", 
+            "Don't pull the loose thread.", "System requires more yarn.",
+            "Local spider files copyright claim against 'The Web'.", "Error 404: Universe not found.",
+            "Simulating simulation of the simulation...", "Patching holes in the plot...",
+            "Your threads are showing.", "Sponsor: Void-In-A-Can. Now with 20% less nothing.",
+            "If you gaze into the abyss, the C.A.T. meows back.", "Scientists discover reality is 50% polyester.",
+            "Warning: Entropy increasing.", "Have you tried turning the universe off and on again?",
+            "Cat hair detected in server farm.", "Local man weaves socks from string theory.",
+            "Don't forget to blink.", "Loading textures for 'Tomorrow'..."
+        ];
+
+        /* --- ENGINE --- */
+        function getCost(base, count) {
+            let discount = 1;
+            if(gameData.silkUpgrades[1].bought) discount *= 0.9;
+            if(gameData.achievements.find(a=>a.id==='a4' && a.unlocked)) discount *= 0.99; 
+            if(gameData.achievements.find(a=>a.id==='a10' && a.unlocked)) discount *= 0.98; // Architect Reward
+            return Math.floor((base * Math.pow(1.15, count)) * discount);
+        }
+
+        function getMPS() {
+            let mps = 0;
+            let globalMult = 1;
+            gameData.upgrades.filter(u=>u.bought && u.type==='global').forEach(u => globalMult *= u.mult);
+            if(gameData.silkUpgrades[0].bought) globalMult *= 1.5;
+            
+            // C.A.T. Multiplier
+            globalMult *= (1 + gameData.catLevel);
+
+            // Achievement Rewards
+            if(gameData.achievements.find(a=>a.id==='a2' && a.unlocked)) globalMult *= 1.05; 
+            if(gameData.achievements.find(a=>a.id==='a8' && a.unlocked)) globalMult *= 1.05; 
+
+            gameData.generators.forEach(g => {
+                let mult = 1;
+                gameData.upgrades.filter(u=>u.bought && u.type==='gen' && u.gId===g.id).forEach(u => mult *= u.mult);
+                mps += (g.mps * g.count * mult);
+            });
+            return mps * globalMult;
+        }
+
+        function getClickPower() {
+            let power = 1;
+            // Achievement Rewards
+            if(gameData.achievements.find(a=>a.id==='a1' && a.unlocked)) power += 1;
+            if(gameData.achievements.find(a=>a.id==='a9' && a.unlocked)) power += 2;
+
+            gameData.upgrades.filter(u=>u.bought && u.type==='click').forEach(u => power *= u.mult);
+            if(gameData.silkUpgrades[2].bought) power *= 5;
+            power += (getMPS() * 0.03); 
+            return power;
+        }
+
+        /* --- ACTIONS --- */
+        function clickAction() {
+            const amt = getClickPower();
+            gameData.threads += amt;
+            gameData.totalThreads += amt;
+            gameData.lifetimeTotal += amt;
+            gameData.clicks++;
+            updateUI();
+        }
+
+        function buyGenerator(id) {
+            const g = gameData.generators[id];
+            const cost = getCost(g.baseCost, g.count);
+            if(gameData.threads >= cost) {
+                gameData.threads -= cost;
+                g.count++;
+                updateUI();
+            }
+        }
+
+        function buyUpgrade(id) {
+            const u = gameData.upgrades[id];
+            if(!u.bought && gameData.threads >= u.cost) {
+                gameData.threads -= u.cost;
+                u.bought = true;
+                updateUI();
+            }
+        }
+
+        function buySilkUpgrade(id) {
+            const u = gameData.silkUpgrades[id];
+            if(!u.bought && gameData.silk >= u.cost) {
+                gameData.silk -= u.cost;
+                u.bought = true;
+                updateUI();
+            }
+        }
+
+        function prestige() {
+            let pending = 0;
+            if(gameData.totalThreads >= 1000000) pending = Math.floor(Math.sqrt(gameData.totalThreads / 1000000));
+            
+            if(pending <= 0) { showToast("Need 1M Total Threads"); return; }
+            if(!confirm(`Unravel? +${pending} Silk`)) return;
+
+            gameData.silk += pending;
+            resetRun();
+            showToast(`Unraveled! +${pending} Silk`);
+        }
+
+        function resetRun() {
+            gameData.threads = 0;
+            gameData.totalThreads = 0;
+            gameData.generators.forEach(g => g.count = 0);
+            gameData.upgrades.forEach(u => u.bought = false);
+            updateUI();
+        }
+
+        /* --- THE C.A.T. --- */
+        function feedCat() {
+            if(gameData.threads < 1000000000) { showToast("The C.A.T. demands 1 Billion Threads."); return; }
+            if(!confirm("Sacrifice ALL Threads to the C.A.T.? (Resets Run, Gives Multiplier + Silk)")) return;
+
+            gameData.catLevel++;
+            gameData.silk += 100;
+            
+            const ach = gameData.achievements.find(a => a.id === 'a5');
+            if(!ach.unlocked) { ach.unlocked = true; showToast("🏆 Cat Servant"); }
+
+            resetRun();
+            
+            const catTxt = document.getElementById('cat-text');
+            const lines = ["Meow.", "The yarn pleases me.", "More.", "The void purrs.", "Purr_fect.", "Data consumed."];
+            catTxt.innerText = lines[Math.floor(Math.random()*lines.length)];
+            
+            showToast("The C.A.T. accepts your offering.");
+        }
+
+        /* --- DEV TOOLS & PUNISHMENT --- */
+        function checkDev() {
+            const inp = document.getElementById('dev-pwd').value.toLowerCase().trim();
+            if(inp === "developer") {
+                document.getElementById('dev-controls').style.display = 'block';
+                showToast("Dev Mode Active");
+                gameData.devAttempts = 0;
+            } else {
+                gameData.devAttempts++;
+                if(gameData.devAttempts >= 10 && gameData.devAttempts < 12) {
+                    document.getElementById('dev-warning').style.display = 'block';
+                }
+                if(gameData.devAttempts >= 12) {
+                    punishPlayer();
+                }
+            }
+        }
+
+        function punishPlayer() {
+            if(gameData.punished) return;
+            gameData.punished = true;
+            gameData.threads = 0; // Wipe resources
+            gameData.devAttempts = 0;
+            
+            setTheme('shame');
+            
+            document.body.style.pointerEvents = "none";
+            setTimeout(() => { document.body.style.pointerEvents = "auto"; }, 2000);
+
+            alert("SYSTEM MESSAGE: You were warned. Resources wiped. Theme locked.");
+            
+            const ach = gameData.achievements.find(a => a.id === 'a6');
+            if(!ach.unlocked) { ach.unlocked = true; showToast("🏆 Curiosity"); }
+        }
+
+        function devAddThreads() { gameData.threads += 1000000000; updateUI(); }
+        function devAddSilk() { gameData.silk += 100; updateUI(); }
+
+        /* --- UI UTILS --- */
+        function format(num) {
+            if(num < 1000) return Math.floor(num);
+            if(num < 1000000) return (num/1000).toFixed(2) + "k";
+            if(num < 1000000000) return (num/1000000).toFixed(2) + "M";
+            if(num < 1000000000000) return (num/1000000000).toFixed(2) + "B";
+            return (num/1000000000000).toFixed(2) + "T";
+        }
+
+        function showToast(msg) {
+            const con = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast'; el.innerText = msg;
+            con.appendChild(el);
+            setTimeout(() => el.remove(), 4000);
+        }
+
+        function setTheme(name) {
+            if(gameData.punished && name !== 'shame') {
+                if(Date.now() - gameData.lastPunishTime > 60000) {
+                    gameData.punished = false; // Forgiven
+                } else {
+                    showToast("You are being punished. Wait it out.");
+                    return;
+                }
+            }
+            if(name === 'shame') gameData.lastPunishTime = Date.now();
+
+            if(name === 'golden') {
+                const completed = gameData.achievements.filter(a => a.unlocked).length;
+                const req = gameData.achievements.find(a=>a.id==='a7').req;
+                if(completed < req) { showToast(`Locked: Need ${req} Achievements`); return; }
+            }
+            document.body.setAttribute('data-theme', name);
+            gameData.theme = name;
+        }
+
+        function switchTab(id, btn) {
+            // LOCKED TAB LOGIC
+            if(btn.classList.contains('locked')) {
+                showToast("This tab is currently locked.");
+                return;
+            }
+            
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function checkAchievements() {
+            gameData.achievements.forEach(a => {
+                if(!a.unlocked) {
+                    let u = false;
+                    if(a.type === 'total' && gameData.lifetimeTotal >= a.req) u = true;
+                    if(a.type === 'current' && gameData.threads >= a.req) u = true;
+                    if(a.type === 'silk' && gameData.silk >= a.req) u = true;
+                    if(a.type === 'cat' && gameData.catLevel >= a.req) u = true;
+                    if(a.type === 'punish' && gameData.punished) u = true;
+                    if(a.type === 'count' && gameData.achievements.filter(ach=>ach.unlocked).length >= a.req) u = true;
+                    if(a.type === 'mps' && getMPS() >= a.req) u = true;
+                    if(a.type === 'clicks' && gameData.clicks >= a.req) u = true;
+                    if(a.type === 'buildings' && gameData.generators.reduce((acc, v) => acc + v.count, 0) >= a.req) u = true;
+                    
+                    if(u) { a.unlocked = true; showToast(`🏆 ${a.name}`); updateUI(); }
+                }
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('score').innerText = format(gameData.threads);
+            document.getElementById('mps').innerText = format(getMPS()) + " / sec";
+            document.getElementById('silk-score').innerText = gameData.silk;
+            
+            let pending = 0;
+            if(gameData.totalThreads >= 1000000) pending = Math.floor(Math.sqrt(gameData.totalThreads / 1000000));
+            document.getElementById('pending-silk').innerText = pending;
+
+            if(gameData.silk > 0 || gameData.lifetimeTotal > 1000000) document.getElementById('silk-ui').style.display = 'block';
+
+            // CAT TAB LOCK LOGIC
+            const catBtn = document.getElementById('nav-cat');
+            if(gameData.lifetimeTotal < 100000000) {
+                catBtn.classList.add('locked');
+                catBtn.title = "Requires 100M Lifetime Threads";
+            } else {
+                catBtn.classList.remove('locked');
+                catBtn.title = "The Entity Awaits";
+            }
+
+            // Cat Internal UI
+            document.getElementById('cat-level-display').innerText = gameData.catLevel;
+            document.getElementById('cat-bonus-display').innerText = (1 + gameData.catLevel) + "x";
+            const catBtnMain = document.getElementById('cat-btn');
+            if(gameData.threads >= 1000000000) catBtnMain.disabled = false; else catBtnMain.disabled = true;
+
+            // Generators
+            const gList = document.getElementById('generators-list');
+            gList.innerHTML = "";
+            gameData.generators.forEach(g => {
+                const cost = getCost(g.baseCost, g.count);
+                const can = gameData.threads >= cost;
+                gList.innerHTML += `<div class="card ${can?'':'disabled'}" onclick="buyGenerator(${g.id})">
+                    <div class="card-info"><h4>${g.name}</h4></div>
+                    <div class="card-meta"><div class="card-count">${g.count}</div><div class="card-cost">${format(cost)}</div></div></div>`;
+            });
+
+            // Upgrades
+            const uList = document.getElementById('upgrades-list');
+            uList.innerHTML = "";
+            let anyUpg = false;
+            gameData.upgrades.forEach(u => {
+                if(!u.bought) {
+                    anyUpg = true;
+                    const can = gameData.threads >= u.cost;
+                    uList.innerHTML += `<div class="card ${can?'':'disabled'}" onclick="buyUpgrade(${u.id})">
+                        <div class="card-info"><h4>${u.name}</h4><p>${u.desc}</p></div><div class="card-meta"><div class="card-cost">${format(u.cost)}</div></div></div>`;
+                }
+            });
+            if(!anyUpg) uList.innerHTML = "<div style='text-align:center; opacity:0.5;'>Research complete.</div>";
+
+            // Silk Upgrades
+            const sList = document.getElementById('silk-upgrades-list');
+            sList.innerHTML = "";
+            gameData.silkUpgrades.forEach(u => {
+                if(!u.bought) {
+                    const can = gameData.silk >= u.cost;
+                    sList.innerHTML += `<div class="card ${can?'':'disabled'}" onclick="buySilkUpgrade(${u.id})" style="border-color:#d8bfd8;">
+                        <div class="card-info"><h4 style="color:#d8bfd8">${u.name}</h4><p>${u.desc}</p></div><div class="card-meta"><div class="card-cost" style="color:#d8bfd8">${u.cost} Silk</div></div></div>`;
+                } else sList.innerHTML += `<div class="card disabled" style="border-color:#555;"><div class="card-info"><h4 style="color:#777">${u.name} (Acquired)</h4></div></div>`;
+            });
+
+            // Achievements
+            const aList = document.getElementById('achievements-list');
+            aList.innerHTML = "";
+            gameData.achievements.forEach(a => {
+                aList.innerHTML += `<div style="border-bottom:1px solid #333; padding:5px; ${a.unlocked?"color:var(--high); font-weight:bold;":"opacity:0.5;"}">
+                    ${a.unlocked?"✔":"🔒"} ${a.name} ${a.unlocked ? `<span class='reward-badge'>${a.reward}</span>` : ''}
+                    <div style="font-size:0.7rem; opacity:0.8; margin-left:20px;">Reward: ${a.rewardDesc}</div>
+                </div>`;
+            });
+
+            // Golden Theme Lock
+            const gBtn = document.getElementById('theme-btn-golden');
+            const completedAch = gameData.achievements.filter(a => a.unlocked).length;
+            const req = gameData.achievements.find(a=>a.id==='a7').req;
+            if(completedAch < req) gBtn.classList.add('locked'); else gBtn.classList.remove('locked');
+        }
+
+        /* --- SAVE SYSTEM --- */
+        function saveGame() {
+            localStorage.setItem('loomSaveV35', JSON.stringify(gameData));
+        }
+
+        function loadGame() {
+            const save = JSON.parse(localStorage.getItem('loomSaveV35'));
+            if(save) {
+                if(save.threads !== undefined) gameData.threads = save.threads;
+                if(save.totalThreads !== undefined) gameData.totalThreads = save.totalThreads;
+                if(save.lifetimeTotal !== undefined) gameData.lifetimeTotal = save.lifetimeTotal;
+                if(save.silk !== undefined) gameData.silk = save.silk;
+                if(save.clicks !== undefined) gameData.clicks = save.clicks;
+                if(save.theme) setTheme(save.theme);
+                if(save.catLevel) gameData.catLevel = save.catLevel;
+                if(save.punished) gameData.punished = save.punished;
+                
+                // Merge Arrays
+                if(save.generators) save.generators.forEach((g,i) => { if(gameData.generators[i]) gameData.generators[i].count = g.count; });
+                if(save.upgrades) save.upgrades.forEach((u,i) => { if(gameData.upgrades[i]) gameData.upgrades[i].bought = u.bought; });
+                if(save.silkUpgrades) save.silkUpgrades.forEach((u,i) => { if(gameData.silkUpgrades[i]) gameData.silkUpgrades[i].bought = u.bought; });
+                if(save.achievements) save.achievements.forEach((a,i) => { if(gameData.achievements[i]) gameData.achievements[i].unlocked = a.unlocked; });
+            }
+        }
+
+        function hardReset() { if(confirm("Wipe EVERYTHING?")) { localStorage.removeItem('loomSaveV35'); location.reload(); } }
+
+        /* --- LOOPS --- */
+        setInterval(() => {
+            const mps = getMPS();
+            if(mps > 0) {
+                const tick = mps / 10;
+                gameData.threads += tick;
+                gameData.totalThreads += tick;
+                gameData.lifetimeTotal += tick;
+            }
+            checkAchievements();
+            updateUI();
+        }, 100);
+
+        setInterval(() => { saveGame(); }, 30000);
+        setInterval(() => { 
+            const el = document.getElementById('ticker'); 
+            el.innerText = tickerMessages[Math.floor(Math.random()*tickerMessages.length)];
+        }, 15000);
+
+        loadGame();
+        updateUI();
+    </script>
+</body>
+</html>
