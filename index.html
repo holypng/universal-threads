@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Loom of Existence v3.5</title>
+    <title>The Loom of Existence v3.6</title>
+    
+    <meta property="og:title" content="The Loom of Existence">
+    <meta property="og:description" content="Weave the fabric of reality.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧶</text></svg>">
+
     <style>
         :root { --transition: all 0.2s ease; }
 
@@ -36,18 +42,15 @@
         .tab-content.active { display: block; }
 
         nav { display: flex; border-top: 1px solid var(--bord); background: var(--panel); }
-        .nav-btn { flex: 1; padding: 15px; background: none; border: none; color: var(--text); font-family: var(--font); font-weight: bold; cursor: pointer; opacity: 0.6; text-transform: uppercase; border-right: 1px solid var(--bord); position: relative; transition: all 0.3s; }
+        .nav-btn { flex: 1; padding: 15px; background: none; border: none; color: var(--text); font-family: var(--font); font-weight: bold; cursor: pointer; opacity: 0.6; text-transform: uppercase; border-right: 1px solid var(--bord); position: relative; transition: all 0.3s; font-size: 0.8rem; }
         .nav-btn:hover { opacity: 1; background: rgba(255,255,255,0.05); }
         .nav-btn.active { opacity: 1; color: var(--high); border-top: 3px solid var(--high); background: var(--bg); }
         .nav-btn.special { color: #d8bfd8; } 
         
-        /* LOCKED TAB STYLES */
         .nav-btn.cat-tab { color: #ffa500; }
-        .nav-btn.locked { opacity: 0.2; cursor: not-allowed; filter: grayscale(1); }
-        .nav-btn.locked:hover { background: #220000; }
-        .nav-btn.locked::after { content: '🔒'; position: absolute; top: 5px; right: 5px; font-size: 0.8rem; }
+        .nav-btn.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); background: #110000; }
+        .nav-btn.locked::after { content: '🔒'; position: absolute; top: 2px; right: 2px; font-size: 0.7rem; }
 
-        /* --- COMPONENTS --- */
         .main-btn { width: 100%; padding: 20px; font-size: 1.1rem; background: var(--btn); color: var(--high); border: 2px solid var(--high); border-radius: 6px; cursor: pointer; font-family: var(--font); font-weight: bold; box-shadow: 0 4px 0 var(--bord); transition: transform 0.1s; margin-bottom: 20px; }
         .main-btn:active { transform: translateY(4px); box-shadow: none; }
         .main-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; filter: grayscale(1); }
@@ -61,6 +64,10 @@
         .card-meta { text-align: right; }
         .card-cost { color: var(--acc); font-weight: bold; font-size: 0.9rem; }
         .card-count { font-size: 1.2rem; color: var(--high); font-weight: bold; }
+
+        /* --- STATS BOX --- */
+        .stats-box { background: rgba(0,0,0,0.2); border: 1px solid var(--bord); padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; }
+        .stats-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dashed #333; padding-bottom: 2px; }
 
         /* --- C.A.T. --- */
         .cat-container { text-align: center; border: 2px solid #ffa500; background: rgba(255, 165, 0, 0.05); padding: 20px; border-radius: 10px; margin-bottom: 20px; }
@@ -87,6 +94,10 @@
         .theme-btn.locked { opacity: 0.5; cursor: not-allowed; background: #000; }
 
         .reward-badge { background: #224422; color: #88ff88; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-left: 5px; }
+        
+        .save-controls { display:flex; gap:5px; margin-top:10px; border-top:1px solid var(--bord); padding-top:10px; }
+        .save-btn { flex:1; padding:8px; cursor:pointer; background:var(--panel); border:1px solid var(--bord); color:var(--text); }
+        .save-btn:hover { background:#333; }
     </style>
 </head>
 <body data-theme="standard">
@@ -116,9 +127,12 @@
         <div id="tab-void" class="tab-content">
             <div class="prestige-header">
                 <h3 style="color:#d8bfd8; margin:0;">THE LOOM'S END</h3>
-                <p style="font-size:0.8rem; color:#a0a0a0;">Unravel to gain Silk. Silk persists.</p>
+                <p style="font-size:0.8rem; color:#a0a0a0;">Unravel the universe to gain Silk. Silk persists through resets.</p>
                 <div style="font-size:1.2rem; margin:10px 0;">Pending: <span id="pending-silk" style="color:#fff;">0</span> Silk</div>
-                <button class="main-btn" style="border-color:#d8bfd8; color:#d8bfd8; background:#2a0a2a;" onclick="prestige()">UNRAVEL (Reset)</button>
+                
+                <div id="void-warning" style="color:orange; font-size:0.8rem; margin-bottom:10px; display:none;">Requires 1 Million Threads to Unravel.</div>
+                
+                <button id="void-btn" class="main-btn" style="border-color:#d8bfd8; color:#d8bfd8; background:#2a0a2a;" onclick="prestige()">UNRAVEL (Reset)</button>
             </div>
             <h4 style="color:var(--text)">Void Arts</h4>
             <div id="silk-upgrades-list"></div>
@@ -140,6 +154,14 @@
         </div>
 
         <div id="tab-settings" class="tab-content">
+            <h3 style="color:var(--high)">Statistics</h3>
+            <div class="stats-box">
+                <div class="stats-row"><span>Lifetime Threads:</span> <span id="stat-lifetime" style="color:#fff">0</span></div>
+                <div class="stats-row"><span>Manual Clicks:</span> <span id="stat-clicks">0</span></div>
+                <div class="stats-row"><span>Play Time:</span> <span id="stat-time">0m</span></div>
+                <div class="stats-row" style="border:none"><span>C.A.T. Progress:</span> <span id="stat-cat-prog">0%</span></div>
+            </div>
+
             <h3 style="color:var(--high)">Achievements</h3>
             <div id="achievements-list"></div>
             
@@ -152,9 +174,11 @@
                 <button class="theme-btn" id="theme-btn-golden" onclick="setTheme('golden')">GOLDEN</button>
             </div>
 
-            <div style="margin-top:20px; border-top:1px solid var(--bord); padding-top:10px;">
-                <button onclick="saveGame()">Save (S)</button>
-                <button onclick="hardReset()" style="color:red; margin-left:10px;">Hard Reset</button>
+            <div class="save-controls">
+                <button class="save-btn" onclick="saveGame(); showToast('Saved')">Save Local</button>
+                <button class="save-btn" onclick="exportSave()">Export (Copy)</button>
+                <button class="save-btn" onclick="importSave()">Import</button>
+                <button class="save-btn" onclick="hardReset()" style="color:red; border-color:red;">Wipe</button>
             </div>
 
             <div class="dev-console">
@@ -215,7 +239,6 @@
                 { id: "a5", name: "Cat Servant", req: 1, type: "cat", unlocked: false, reward: "Respect", rewardDesc: "The Cat tolerates you" },
                 { id: "a6", name: "Curiosity", req: 1, type: "punish", unlocked: false, reward: "Shame", rewardDesc: "Learned a lesson" },
                 { id: "a7", name: "Completionist", req: 8, type: "count", unlocked: false, reward: "Theme", rewardDesc: "Gold Theme" },
-                // NEW ACHIEVEMENTS
                 { id: "a8", name: "Speed Demon", req: 1000000, type: "mps", unlocked: false, reward: "+5% MPS", rewardDesc: "+5% Global MPS" },
                 { id: "a9", name: "Finger Workout", req: 5000, type: "clicks", unlocked: false, reward: "+2 Click", rewardDesc: "+2 Base Click" },
                 { id: "a10", name: "Architect", req: 500, type: "buildings", unlocked: false, reward: "-2% Cost", rewardDesc: "-2% Building Cost" }
@@ -240,7 +263,7 @@
             let discount = 1;
             if(gameData.silkUpgrades[1].bought) discount *= 0.9;
             if(gameData.achievements.find(a=>a.id==='a4' && a.unlocked)) discount *= 0.99; 
-            if(gameData.achievements.find(a=>a.id==='a10' && a.unlocked)) discount *= 0.98; // Architect Reward
+            if(gameData.achievements.find(a=>a.id==='a10' && a.unlocked)) discount *= 0.98;
             return Math.floor((base * Math.pow(1.15, count)) * discount);
         }
 
@@ -249,11 +272,8 @@
             let globalMult = 1;
             gameData.upgrades.filter(u=>u.bought && u.type==='global').forEach(u => globalMult *= u.mult);
             if(gameData.silkUpgrades[0].bought) globalMult *= 1.5;
-            
-            // C.A.T. Multiplier
             globalMult *= (1 + gameData.catLevel);
 
-            // Achievement Rewards
             if(gameData.achievements.find(a=>a.id==='a2' && a.unlocked)) globalMult *= 1.05; 
             if(gameData.achievements.find(a=>a.id==='a8' && a.unlocked)) globalMult *= 1.05; 
 
@@ -267,7 +287,6 @@
 
         function getClickPower() {
             let power = 1;
-            // Achievement Rewards
             if(gameData.achievements.find(a=>a.id==='a1' && a.unlocked)) power += 1;
             if(gameData.achievements.find(a=>a.id==='a9' && a.unlocked)) power += 2;
 
@@ -316,10 +335,13 @@
         }
 
         function prestige() {
-            let pending = 0;
-            if(gameData.totalThreads >= 1000000) pending = Math.floor(Math.sqrt(gameData.totalThreads / 1000000));
-            
-            if(pending <= 0) { showToast("Need 1M Total Threads"); return; }
+            // FAILSAFE: Explicit check
+            if(gameData.totalThreads < 1000000) {
+                showToast("Not enough Threads!");
+                return;
+            }
+
+            let pending = Math.floor(Math.sqrt(gameData.totalThreads / 1000000));
             if(!confirm(`Unravel? +${pending} Silk`)) return;
 
             gameData.silk += pending;
@@ -347,11 +369,9 @@
             if(!ach.unlocked) { ach.unlocked = true; showToast("🏆 Cat Servant"); }
 
             resetRun();
-            
             const catTxt = document.getElementById('cat-text');
             const lines = ["Meow.", "The yarn pleases me.", "More.", "The void purrs.", "Purr_fect.", "Data consumed."];
             catTxt.innerText = lines[Math.floor(Math.random()*lines.length)];
-            
             showToast("The C.A.T. accepts your offering.");
         }
 
@@ -376,16 +396,12 @@
         function punishPlayer() {
             if(gameData.punished) return;
             gameData.punished = true;
-            gameData.threads = 0; // Wipe resources
+            gameData.threads = 0;
             gameData.devAttempts = 0;
-            
             setTheme('shame');
-            
             document.body.style.pointerEvents = "none";
             setTimeout(() => { document.body.style.pointerEvents = "auto"; }, 2000);
-
             alert("SYSTEM MESSAGE: You were warned. Resources wiped. Theme locked.");
-            
             const ach = gameData.achievements.find(a => a.id === 'a6');
             if(!ach.unlocked) { ach.unlocked = true; showToast("🏆 Curiosity"); }
         }
@@ -420,7 +436,6 @@
                 }
             }
             if(name === 'shame') gameData.lastPunishTime = Date.now();
-
             if(name === 'golden') {
                 const completed = gameData.achievements.filter(a => a.unlocked).length;
                 const req = gameData.achievements.find(a=>a.id==='a7').req;
@@ -431,12 +446,18 @@
         }
 
         function switchTab(id, btn) {
-            // LOCKED TAB LOGIC
             if(btn.classList.contains('locked')) {
-                showToast("This tab is currently locked.");
+                // FAILSAFE: Force check if they actually have the threads now
+                if(gameData.lifetimeTotal >= 100000000) {
+                    btn.classList.remove('locked');
+                    // Retry click
+                    switchTab(id, btn);
+                } else {
+                    const pct = Math.floor((gameData.lifetimeTotal / 100000000) * 100);
+                    showToast(`Locked. Progress: ${pct}% / 100%`);
+                }
                 return;
             }
-            
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + id).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -462,22 +483,62 @@
             });
         }
 
+        /* --- EXPORT / IMPORT --- */
+        function exportSave() {
+            const str = btoa(JSON.stringify(gameData));
+            navigator.clipboard.writeText(str).then(() => showToast("Save Copied to Clipboard!"));
+        }
+
+        function importSave() {
+            const str = prompt("Paste your save code here:");
+            if(!str) return;
+            try {
+                const json = atob(str);
+                const data = JSON.parse(json);
+                localStorage.setItem('loomSaveV36', JSON.stringify(data));
+                location.reload();
+            } catch(e) {
+                alert("Invalid Save Code");
+            }
+        }
+
         function updateUI() {
             document.getElementById('score').innerText = format(gameData.threads);
             document.getElementById('mps').innerText = format(getMPS()) + " / sec";
             document.getElementById('silk-score').innerText = gameData.silk;
             
+            // STATS
+            document.getElementById('stat-lifetime').innerText = format(gameData.lifetimeTotal);
+            document.getElementById('stat-clicks').innerText = gameData.clicks;
+            const mins = Math.floor((Date.now() - gameData.startTime) / 60000);
+            document.getElementById('stat-time').innerText = mins + "m";
+            const catPct = Math.min(100, Math.floor((gameData.lifetimeTotal / 100000000) * 100));
+            document.getElementById('stat-cat-prog').innerText = catPct + "%";
+
+            // PRESTIGE LOGIC
             let pending = 0;
-            if(gameData.totalThreads >= 1000000) pending = Math.floor(Math.sqrt(gameData.totalThreads / 1000000));
+            const voidBtn = document.getElementById('void-btn');
+            const voidWarn = document.getElementById('void-warning');
+            
+            if(gameData.totalThreads >= 1000000) {
+                pending = Math.floor(Math.sqrt(gameData.totalThreads / 1000000));
+                voidBtn.disabled = false;
+                voidBtn.style.opacity = 1;
+                voidWarn.style.display = 'none';
+            } else {
+                voidBtn.disabled = true;
+                voidBtn.style.opacity = 0.5;
+                voidWarn.style.display = 'block';
+            }
             document.getElementById('pending-silk').innerText = pending;
 
             if(gameData.silk > 0 || gameData.lifetimeTotal > 1000000) document.getElementById('silk-ui').style.display = 'block';
 
-            // CAT TAB LOCK LOGIC
+            // CAT TAB LOCK LOGIC (FAILSAFE)
             const catBtn = document.getElementById('nav-cat');
             if(gameData.lifetimeTotal < 100000000) {
                 catBtn.classList.add('locked');
-                catBtn.title = "Requires 100M Lifetime Threads";
+                catBtn.title = `Requires 100M Lifetime Threads (${catPct}%)`;
             } else {
                 catBtn.classList.remove('locked');
                 catBtn.title = "The Entity Awaits";
@@ -544,17 +605,18 @@
 
         /* --- SAVE SYSTEM --- */
         function saveGame() {
-            localStorage.setItem('loomSaveV35', JSON.stringify(gameData));
+            localStorage.setItem('loomSaveV36', JSON.stringify(gameData));
         }
 
         function loadGame() {
-            const save = JSON.parse(localStorage.getItem('loomSaveV35'));
+            const save = JSON.parse(localStorage.getItem('loomSaveV36'));
             if(save) {
                 if(save.threads !== undefined) gameData.threads = save.threads;
                 if(save.totalThreads !== undefined) gameData.totalThreads = save.totalThreads;
                 if(save.lifetimeTotal !== undefined) gameData.lifetimeTotal = save.lifetimeTotal;
                 if(save.silk !== undefined) gameData.silk = save.silk;
                 if(save.clicks !== undefined) gameData.clicks = save.clicks;
+                if(save.startTime) gameData.startTime = save.startTime;
                 if(save.theme) setTheme(save.theme);
                 if(save.catLevel) gameData.catLevel = save.catLevel;
                 if(save.punished) gameData.punished = save.punished;
@@ -567,7 +629,7 @@
             }
         }
 
-        function hardReset() { if(confirm("Wipe EVERYTHING?")) { localStorage.removeItem('loomSaveV35'); location.reload(); } }
+        function hardReset() { if(confirm("Wipe EVERYTHING?")) { localStorage.removeItem('loomSaveV36'); location.reload(); } }
 
         /* --- LOOPS --- */
         setInterval(() => {
