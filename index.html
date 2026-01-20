@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Loom of Existence v3.6</title>
+    <title>The Loom of Existence v3.7</title>
     
     <meta property="og:title" content="The Loom of Existence">
-    <meta property="og:description" content="Weave the fabric of reality.">
+    <meta property="og:description" content="Weave the fabric of reality. Sacrifice to the C.A.T. An incremental odyssey.">
     <meta property="og:type" content="website">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧶</text></svg>">
 
@@ -20,6 +20,11 @@
         [data-theme="terminal"] { --bg: #1a1a1a; --panel: #000; --text: #ffb000; --high: #ffcc00; --acc: #ff9900; --bord: #664400; --font: 'VT323', monospace; --btn: #332200; }
         [data-theme="golden"] { --bg: #2c241b; --panel: #4a3b2a; --text: #fff8e1; --high: #ffd700; --acc: #ffecb3; --bord: #8a6e45; --font: 'Georgia', serif; --btn: #5c4d35; }
         [data-theme="shame"] { --bg: #ffcccc; --panel: #ff9999; --text: #550000; --high: #ff0000; --acc: #ff0000; --bord: #ff0000; --font: 'Comic Sans MS', cursive; --btn: #ffaaaa; }
+        
+        /* NEW THEMES v3.7 */
+        [data-theme="matrix"] { --bg: #000000; --panel: #0a0a0a; --text: #00ff00; --high: #00ff00; --acc: #008800; --bord: #003300; --font: 'Courier New', monospace; --btn: #001100; }
+        [data-theme="cotton"] { --bg: #ffeaf5; --panel: #e0f7fa; --text: #555; --high: #ff69b4; --acc: #87ceeb; --bord: #ffc0cb; --font: 'Verdana', sans-serif; --btn: #fff0f5; }
+        [data-theme="contrast"] { --bg: #000; --panel: #000; --text: #fff; --high: #fff; --acc: #fff; --bord: #fff; --font: 'Arial', sans-serif; --btn: #000; }
 
         body {
             background-color: var(--bg); color: var(--text); font-family: var(--font);
@@ -171,6 +176,9 @@
                 <button class="theme-btn" onclick="setTheme('blueprint')">Blueprint</button>
                 <button class="theme-btn" onclick="setTheme('midnight')">Midnight</button>
                 <button class="theme-btn" onclick="setTheme('terminal')">Terminal</button>
+                <button class="theme-btn" onclick="setTheme('matrix')">Matrix</button>
+                <button class="theme-btn" onclick="setTheme('cotton')">Cotton</button>
+                <button class="theme-btn" onclick="setTheme('contrast')">Contrast</button>
                 <button class="theme-btn" id="theme-btn-golden" onclick="setTheme('golden')">GOLDEN</button>
             </div>
 
@@ -217,19 +225,22 @@
                 { id: 2, name: "Spider Drone", baseCost: 1100, mps: 16, count: 0 },
                 { id: 3, name: "Quantum Loom", baseCost: 12000, mps: 60, count: 0 },
                 { id: 4, name: "Timeline Splicer", baseCost: 130000, mps: 250, count: 0 },
-                { id: 5, name: "Big Bang Forge", baseCost: 1500000, mps: 1000, count: 0 }
+                { id: 5, name: "Big Bang Forge", baseCost: 1500000, mps: 1000, count: 0 },
+                { id: 6, name: "Reality Engine", baseCost: 15000000, mps: 5000, count: 0 } // NEW IN 3.7
             ],
             upgrades: [
                 { id: 0, name: "Thimble", cost: 250, type: "click", mult: 2, bought: false, desc: "Click x2" },
                 { id: 1, name: "Caffeine", cost: 1000, type: "gen", gId: 0, mult: 2, bought: false, desc: "Roller x2" },
                 { id: 2, name: "Steel Wool", cost: 5000, type: "click", mult: 2, bought: false, desc: "Click x2" },
                 { id: 3, name: "Neon Thread", cost: 15000, type: "gen", gId: 1, mult: 2, bought: false, desc: "Needle x2" },
-                { id: 4, name: "The Algorithm", cost: 200000, type: "global", mult: 1.2, bought: false, desc: "Global +20%" }
+                { id: 4, name: "The Algorithm", cost: 200000, type: "global", mult: 1.2, bought: false, desc: "Global +20%" },
+                { id: 5, name: "Flux Capacitor", cost: 25000000, type: "gen", gId: 6, mult: 2, bought: false, desc: "Engine x2" } // NEW IN 3.7
             ],
             silkUpgrades: [
                 { id: 0, name: "Reality Anchor", cost: 1, type: "global", mult: 1.5, bought: false, desc: "Production +50%" },
                 { id: 1, name: "Discounted Physics", cost: 3, type: "cost", mult: 0.9, bought: false, desc: "Costs -10%" },
-                { id: 2, name: "Void Touch", cost: 25, type: "click", mult: 5, bought: false, desc: "Click x5" }
+                { id: 2, name: "Void Touch", cost: 25, type: "click", mult: 5, bought: false, desc: "Click x5" },
+                { id: 3, name: "Chronal Siphon", cost: 100, type: "time", mult: 1.1, bought: false, desc: "+10% per Hour Played" } // NEW IN 3.7
             ],
             achievements: [
                 { id: "a1", name: "First Stitch", req: 100, type: "total", unlocked: false, reward: "+1 Click", rewardDesc: "+1 Base Click" },
@@ -238,10 +249,14 @@
                 { id: "a4", name: "Hoarder", req: 1000000, type: "current", unlocked: false, reward: "-1% Cost", rewardDesc: "-1% Costs" },
                 { id: "a5", name: "Cat Servant", req: 1, type: "cat", unlocked: false, reward: "Respect", rewardDesc: "The Cat tolerates you" },
                 { id: "a6", name: "Curiosity", req: 1, type: "punish", unlocked: false, reward: "Shame", rewardDesc: "Learned a lesson" },
-                { id: "a7", name: "Completionist", req: 8, type: "count", unlocked: false, reward: "Theme", rewardDesc: "Gold Theme" },
+                { id: "a7", name: "Completionist", req: 11, type: "count", unlocked: false, reward: "Theme", rewardDesc: "Gold Theme" },
                 { id: "a8", name: "Speed Demon", req: 1000000, type: "mps", unlocked: false, reward: "+5% MPS", rewardDesc: "+5% Global MPS" },
                 { id: "a9", name: "Finger Workout", req: 5000, type: "clicks", unlocked: false, reward: "+2 Click", rewardDesc: "+2 Base Click" },
-                { id: "a10", name: "Architect", req: 500, type: "buildings", unlocked: false, reward: "-2% Cost", rewardDesc: "-2% Building Cost" }
+                { id: "a10", name: "Architect", req: 500, type: "buildings", unlocked: false, reward: "-2% Cost", rewardDesc: "-2% Building Cost" },
+                // NEW v3.7
+                { id: "a11", name: "Millionaire", req: 1000000, type: "silk", unlocked: false, reward: "+10% MPS", rewardDesc: "+10% Global MPS" },
+                { id: "a12", name: "Clicking Frenzy", req: 10000, type: "clicks", unlocked: false, reward: "+5 Click", rewardDesc: "+5 Base Click" },
+                { id: "a13", name: "Time Lord", req: 60, type: "time", unlocked: false, reward: "-1% Cost", rewardDesc: "-1% Costs" } // 60 mins
             ]
         };
 
@@ -255,7 +270,15 @@
             "If you gaze into the abyss, the C.A.T. meows back.", "Scientists discover reality is 50% polyester.",
             "Warning: Entropy increasing.", "Have you tried turning the universe off and on again?",
             "Cat hair detected in server farm.", "Local man weaves socks from string theory.",
-            "Don't forget to blink.", "Loading textures for 'Tomorrow'..."
+            "Don't forget to blink.", "Loading textures for 'Tomorrow'...",
+            // NEW v3.7 MESSAGES
+            "Updating the matrix... please hold.", "The Reality Engine is making a weird humming noise.",
+            "Who left the wormhole open?", "Reminder: Do not feed the C.A.T. after midnight.",
+            "String theory? More like Yarn theory.", "Downloading more RAM for the universe...",
+            "A butterfly flapped its wings and caused a server crash.", "Philosophy update: Why?",
+            "Breaking News: Nothing happened, then everything happened.", "Quantum mechanics is just magic with math.",
+            "Developer Note: I am tired.", "Recycling old timelines...", 
+            "The C.A.T. is staring at something you can't see.", "42.", "Is this real life? Or just CSS?"
         ];
 
         /* --- ENGINE --- */
@@ -264,6 +287,7 @@
             if(gameData.silkUpgrades[1].bought) discount *= 0.9;
             if(gameData.achievements.find(a=>a.id==='a4' && a.unlocked)) discount *= 0.99; 
             if(gameData.achievements.find(a=>a.id==='a10' && a.unlocked)) discount *= 0.98;
+            if(gameData.achievements.find(a=>a.id==='a13' && a.unlocked)) discount *= 0.99;
             return Math.floor((base * Math.pow(1.15, count)) * discount);
         }
 
@@ -272,10 +296,18 @@
             let globalMult = 1;
             gameData.upgrades.filter(u=>u.bought && u.type==='global').forEach(u => globalMult *= u.mult);
             if(gameData.silkUpgrades[0].bought) globalMult *= 1.5;
+            
+            // TIME UPGRADE (v3.7)
+            if(gameData.silkUpgrades[3].bought) {
+                const hours = (Date.now() - gameData.startTime) / 3600000;
+                globalMult *= (1 + (hours * 0.1));
+            }
+
             globalMult *= (1 + gameData.catLevel);
 
             if(gameData.achievements.find(a=>a.id==='a2' && a.unlocked)) globalMult *= 1.05; 
             if(gameData.achievements.find(a=>a.id==='a8' && a.unlocked)) globalMult *= 1.05; 
+            if(gameData.achievements.find(a=>a.id==='a11' && a.unlocked)) globalMult *= 1.10;
 
             gameData.generators.forEach(g => {
                 let mult = 1;
@@ -289,6 +321,7 @@
             let power = 1;
             if(gameData.achievements.find(a=>a.id==='a1' && a.unlocked)) power += 1;
             if(gameData.achievements.find(a=>a.id==='a9' && a.unlocked)) power += 2;
+            if(gameData.achievements.find(a=>a.id==='a12' && a.unlocked)) power += 5;
 
             gameData.upgrades.filter(u=>u.bought && u.type==='click').forEach(u => power *= u.mult);
             if(gameData.silkUpgrades[2].bought) power *= 5;
@@ -335,7 +368,7 @@
         }
 
         function prestige() {
-            // FAILSAFE: Explicit check
+            // FAILSAFE
             if(gameData.totalThreads < 1000000) {
                 showToast("Not enough Threads!");
                 return;
@@ -450,7 +483,6 @@
                 // FAILSAFE: Force check if they actually have the threads now
                 if(gameData.lifetimeTotal >= 100000000) {
                     btn.classList.remove('locked');
-                    // Retry click
                     switchTab(id, btn);
                 } else {
                     const pct = Math.floor((gameData.lifetimeTotal / 100000000) * 100);
@@ -478,6 +510,12 @@
                     if(a.type === 'clicks' && gameData.clicks >= a.req) u = true;
                     if(a.type === 'buildings' && gameData.generators.reduce((acc, v) => acc + v.count, 0) >= a.req) u = true;
                     
+                    // NEW v3.7 Logic
+                    if(a.type === 'time') {
+                        const mins = (Date.now() - gameData.startTime) / 60000;
+                        if(mins >= a.req) u = true;
+                    }
+
                     if(u) { a.unlocked = true; showToast(`🏆 ${a.name}`); updateUI(); }
                 }
             });
@@ -495,7 +533,7 @@
             try {
                 const json = atob(str);
                 const data = JSON.parse(json);
-                localStorage.setItem('loomSaveV36', JSON.stringify(data));
+                localStorage.setItem('loomSaveV37', JSON.stringify(data));
                 location.reload();
             } catch(e) {
                 alert("Invalid Save Code");
@@ -534,7 +572,7 @@
 
             if(gameData.silk > 0 || gameData.lifetimeTotal > 1000000) document.getElementById('silk-ui').style.display = 'block';
 
-            // CAT TAB LOCK LOGIC (FAILSAFE)
+            // CAT TAB LOCK LOGIC
             const catBtn = document.getElementById('nav-cat');
             if(gameData.lifetimeTotal < 100000000) {
                 catBtn.classList.add('locked');
@@ -605,11 +643,11 @@
 
         /* --- SAVE SYSTEM --- */
         function saveGame() {
-            localStorage.setItem('loomSaveV36', JSON.stringify(gameData));
+            localStorage.setItem('loomSaveV37', JSON.stringify(gameData));
         }
 
         function loadGame() {
-            const save = JSON.parse(localStorage.getItem('loomSaveV36'));
+            const save = JSON.parse(localStorage.getItem('loomSaveV37'));
             if(save) {
                 if(save.threads !== undefined) gameData.threads = save.threads;
                 if(save.totalThreads !== undefined) gameData.totalThreads = save.totalThreads;
@@ -621,7 +659,7 @@
                 if(save.catLevel) gameData.catLevel = save.catLevel;
                 if(save.punished) gameData.punished = save.punished;
                 
-                // Merge Arrays
+                // Merge Arrays (Safe method for updates)
                 if(save.generators) save.generators.forEach((g,i) => { if(gameData.generators[i]) gameData.generators[i].count = g.count; });
                 if(save.upgrades) save.upgrades.forEach((u,i) => { if(gameData.upgrades[i]) gameData.upgrades[i].bought = u.bought; });
                 if(save.silkUpgrades) save.silkUpgrades.forEach((u,i) => { if(gameData.silkUpgrades[i]) gameData.silkUpgrades[i].bought = u.bought; });
@@ -629,7 +667,7 @@
             }
         }
 
-        function hardReset() { if(confirm("Wipe EVERYTHING?")) { localStorage.removeItem('loomSaveV36'); location.reload(); } }
+        function hardReset() { if(confirm("Wipe EVERYTHING?")) { localStorage.removeItem('loomSaveV37'); location.reload(); } }
 
         /* --- LOOPS --- */
         setInterval(() => {
